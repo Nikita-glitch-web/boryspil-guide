@@ -49,6 +49,8 @@ export const CategoryPage = () => {
             title={item.title}
             subtitle={item.subtitle}
             phone={item.phone}
+            mapUrl={item.mapUrl}
+            schedule={item.schedule}
           />
         ))
       )}

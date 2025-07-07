@@ -88,9 +88,12 @@ export const MapView = () => {
       new mapboxgl.Marker(markerEl)
         .setLngLat(point.coordinates)
         .setPopup(
-          new mapboxgl.Popup().setHTML(
-            `<strong>${point.title}</strong><br/>${point.address || ""}`
-          )
+          new mapboxgl.Popup().setHTML(`
+            <div style="color: #000; font-size: 14px; line-height: 1.4;">
+              <strong>${point.title?.trim() || "Без назви"}</strong><br/>
+              ${point.address?.trim() || "Адреса не вказана"}
+            </div>
+          `)
         )
         .addTo(map.current!);
     });
