@@ -15,11 +15,78 @@ export const CategoryPage = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredData = data.filter((item) =>
-    `${item.title} ${item.subtitle ?? ""} ${item.phone ?? ""}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+  // Функція для пошуку маршрутів (для id === 'transport')
+  const findTransportMatches = () => {
+    const lowerSearch = searchTerm.toLowerCase().trim();
+    if (!lowerSearch) return [];
+
+    const searchWords = lowerSearch.split(/\s+/);
+
+    // Фільтруємо маршрути, де всі слова є або в назві маршруту, або в зупинках
+    return data.filter((item) =>
+      searchWords.every(
+        (word) =>
+          item.title.toLowerCase().includes(word) ||
+          item.stops?.some((stop) => stop.name.toLowerCase().includes(word))
+      )
+    );
+  };
+
+  // Для показу інфо про зупинку (якщо введено кілька слів)
+  const renderStopInfo = () => {
+    if (id !== "transport") return null;
+
+    const lowerSearch = searchTerm.toLowerCase().trim();
+    if (!lowerSearch) return null;
+
+    const searchWords = lowerSearch.split(/\s+/);
+
+    // Знаходимо перший маршрут, що містить всі слова
+    const match = data.find((item) =>
+      searchWords.every(
+        (word) =>
+          item.title.toLowerCase().includes(word) ||
+          item.stops?.some((stop) => stop.name.toLowerCase().includes(word))
+      )
+    );
+
+    if (!match) return null;
+
+    // Знаходимо зупинку, яка містить хоча б одне зі слів пошуку
+    const matchedStop = match.stops?.find((stop) =>
+      searchWords.some((word) => stop.name.toLowerCase().includes(word))
+    );
+
+    if (matchedStop) {
+      return (
+        <Box mb={2}>
+          <Typography variant="body1" color="primary">
+            🚌 {match.title}: Автобус буде на зупинці "{matchedStop.name}" о{" "}
+            {matchedStop.time}
+          </Typography>
+        </Box>
+      );
+    } else {
+      return (
+        <Box mb={2}>
+          <Typography variant="body2" color="text.secondary">
+            Зупинка не знайдена у {match.title}
+          </Typography>
+        </Box>
+      );
+    }
+  };
+
+  // Вибираємо дані для рендеру:
+  // Якщо transport - фільтруємо за новою логікою, інакше звичайний фільтр по title, subtitle, phone
+  const filteredData =
+    id === "transport" && searchTerm.trim() !== ""
+      ? findTransportMatches()
+      : data.filter((item) =>
+          `${item.title} ${item.subtitle ?? ""} ${item.phone ?? ""}`
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+        );
 
   return (
     <Container sx={{ mt: 4 }}>
@@ -37,6 +104,8 @@ export const CategoryPage = () => {
         onChange={setSearchTerm}
         placeholder="Пошук контактів, адреси або номеру..."
       />
+
+      {renderStopInfo()}
 
       {searchTerm.trim() !== "" && filteredData.length === 0 ? (
         <Typography variant="body1" color="text.secondary">
