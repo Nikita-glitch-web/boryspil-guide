@@ -26,3 +26,20 @@ export type CategoryData = {
   emergency: OtherCategoryItem[];
   [key: string]: OtherCategoryItem[] | TransportItem[];
 };
+
+export type Direction = "forward" | "backward";
+
+export interface TrainStop {
+  name: string;
+  arrival: string;
+  departure: string;
+  platform?: string;
+}
+
+export interface ElectricTrainRoute {
+  id: string;
+  title: string;
+  direction: Direction;
+  stops: TrainStop[];
+  subtitle?: string;
+}
