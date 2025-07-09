@@ -1,38 +1,63 @@
 import { useParams } from "react-router-dom";
-import { Container, Typography, Box, Divider } from "@mui/material";
-import { useState } from "react";
+import {
+  Container,
+  Typography,
+  Box,
+  Divider,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 import { categoryData } from "../../data/mockData";
 import { InfoCard } from "../../components/InfoCard/InfoCard";
 import { categories } from "../../data/categories";
 import { SearchBar } from "../../components/SearchBar/SearchBar";
+import type { BaseCategoryItem, TransportItem, Stop } from "../../data/types";
 
 export const CategoryPage = () => {
-  const { id } = useParams<{ id: string }>();
-  const data = categoryData[id || ""] || [];
+  const { id } = useParams<{ id?: string }>();
 
-  const category = categories.find((cat) => cat.id === id);
-  const Icon = category?.icon;
+  const category = (id && categories.find((cat) => cat.id === id)) || null;
+  const Icon =
+    category && typeof category !== "string" ? category.icon : undefined;
 
+  const [data, setData] = useState<BaseCategoryItem[] | TransportItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Функція для пошуку маршрутів (для id === 'transport')
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    const timeout = setTimeout(() => {
+      if (!id || !(id in categoryData)) {
+        setError("Категорія не знайдена або сталася помилка при завантаженні.");
+        setData([]);
+      } else {
+        setData(categoryData[id]);
+      }
+      setLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timeout);
+  }, [id]);
+
   const findTransportMatches = () => {
     const lowerSearch = searchTerm.toLowerCase().trim();
-    if (!lowerSearch) return [];
-
     const searchWords = lowerSearch.split(/\s+/);
 
-    // Фільтруємо маршрути, де всі слова є або в назві маршруту, або в зупинках
-    return data.filter((item) =>
+    return (data as TransportItem[]).filter((item) =>
       searchWords.every(
         (word) =>
           item.title.toLowerCase().includes(word) ||
-          item.stops?.some((stop) => stop.name.toLowerCase().includes(word))
+          item.stops?.some((stop: Stop) =>
+            stop.name.toLowerCase().includes(word)
+          )
       )
     );
   };
 
-  // Для показу інфо про зупинку (якщо введено кілька слів)
   const renderStopInfo = () => {
     if (id !== "transport") return null;
 
@@ -41,19 +66,19 @@ export const CategoryPage = () => {
 
     const searchWords = lowerSearch.split(/\s+/);
 
-    // Знаходимо перший маршрут, що містить всі слова
-    const match = data.find((item) =>
+    const match = (data as TransportItem[]).find((item) =>
       searchWords.every(
         (word) =>
           item.title.toLowerCase().includes(word) ||
-          item.stops?.some((stop) => stop.name.toLowerCase().includes(word))
+          item.stops?.some((stop: Stop) =>
+            stop.name.toLowerCase().includes(word)
+          )
       )
     );
 
     if (!match) return null;
 
-    // Знаходимо зупинку, яка містить хоча б одне зі слів пошуку
-    const matchedStop = match.stops?.find((stop) =>
+    const matchedStop = match.stops?.find((stop: Stop) =>
       searchWords.some((word) => stop.name.toLowerCase().includes(word))
     );
 
@@ -77,12 +102,10 @@ export const CategoryPage = () => {
     }
   };
 
-  // Вибираємо дані для рендеру:
-  // Якщо transport - фільтруємо за новою логікою, інакше звичайний фільтр по title, subtitle, phone
   const filteredData =
     id === "transport" && searchTerm.trim() !== ""
       ? findTransportMatches()
-      : data.filter((item) =>
+      : (data as BaseCategoryItem[]).filter((item) =>
           `${item.title} ${item.subtitle ?? ""} ${item.phone ?? ""}`
             .toLowerCase()
             .includes(searchTerm.toLowerCase())
@@ -93,7 +116,7 @@ export const CategoryPage = () => {
       <Box display="flex" alignItems="center" gap={2} mb={2}>
         {Icon && <Icon fontSize="large" color="primary" />}
         <Typography variant="h4" component="h1">
-          {category?.title || id?.toUpperCase()}
+          {category?.title || (typeof id === "string" ? id.toUpperCase() : "")}
         </Typography>
       </Box>
 
@@ -107,21 +130,35 @@ export const CategoryPage = () => {
 
       {renderStopInfo()}
 
-      {searchTerm.trim() !== "" && filteredData.length === 0 ? (
-        <Typography variant="body1" color="text.secondary">
-          Нічого не знайдено.
-        </Typography>
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {loading ? (
+        <Box mt={4} display="flex" justifyContent="center">
+          <CircularProgress />
+        </Box>
       ) : (
-        filteredData.map((item, index) => (
-          <InfoCard
-            key={index}
-            title={item.title}
-            subtitle={item.subtitle}
-            phone={item.phone}
-            mapUrl={item.mapUrl}
-            schedule={item.schedule}
-          />
-        ))
+        <>
+          {searchTerm.trim() !== "" && filteredData.length === 0 ? (
+            <Typography variant="body1" color="text.secondary" mt={2}>
+              Нічого не знайдено.
+            </Typography>
+          ) : (
+            filteredData.map((item, index) => (
+              <InfoCard
+                key={index}
+                title={item.title}
+                subtitle={item.subtitle}
+                phone={item.phone}
+                mapUrl={item.mapUrl}
+                schedule={item.schedule}
+              />
+            ))
+          )}
+        </>
       )}
     </Container>
   );
