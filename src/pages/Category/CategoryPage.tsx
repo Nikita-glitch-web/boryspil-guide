@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -6,6 +6,7 @@ import {
   Divider,
   CircularProgress,
   Alert,
+  Button,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { categoryData } from "../../data/mockData";
@@ -16,6 +17,7 @@ import type { BaseCategoryItem, TransportItem, Stop } from "../../data/types";
 
 export const CategoryPage = () => {
   const { id } = useParams<{ id?: string }>();
+  const navigate = useNavigate(); // 🔹 Додано
 
   const category = (id && categories.find((cat) => cat.id === id)) || null;
   const Icon =
@@ -127,6 +129,19 @@ export const CategoryPage = () => {
         onChange={setSearchTerm}
         placeholder="Пошук контактів, адреси або номеру..."
       />
+
+      {/* 🔹 Кнопка переходу до електричок */}
+      {id === "transport" && (
+        <Box mt={2}>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => navigate("/transport/trains")}
+          >
+            Перейти до електричок 🚆
+          </Button>
+        </Box>
+      )}
 
       {renderStopInfo()}
 
