@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HomePage } from "./pages/Home/HomePage";
 import { CategoryPage } from "./pages/Category/CategoryPage";
-
+import { TrainPage } from "./pages/Train/TrainPage";
 import { ThemeProvider, CssBaseline, IconButton, Box } from "@mui/material";
 import { lightTheme, darkTheme } from "./theme/theme";
 import { useEffect, useState } from "react";
@@ -43,6 +43,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/category/:id" element={<CategoryPage />} />
+          <Route path="/transport/trains" element={<TrainPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
